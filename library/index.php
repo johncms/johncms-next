@@ -96,7 +96,7 @@ if ($id > 0) {
         $hdrres = $hdrsql->fetchColumn();
     }
 
-    $hdr = $id > 0 ? htmlentities($hdrres, ENT_QUOTES, 'UTF-8') : '';
+    $hdr = htmlentities($hdrres, ENT_QUOTES, 'UTF-8');
     if ($hdr) {
         $textl .=  ' | ' . (mb_strlen($hdr) > 30 ? $hdr . '...' : $hdr);
     }
