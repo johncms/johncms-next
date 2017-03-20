@@ -53,13 +53,13 @@ switch ($mod) {
             exit;
         }
 
-        $req = $db->query("SELECT * FROM `forum` WHERE `id` = '$id' AND (`type` = 'f' OR `type` = 'r')");
+        $req = $db->query("SELECT * FROM `forum` WHERE `id` = " . $id . " AND (`type` = 'f' OR `type` = 'r')");
 
         if ($req->rowCount()) {
             $res = $req->fetch();
             echo '<div class="phdr"><b>' . ($res['type'] == 'r' ? _t('Delete section') : _t('Delete category')) . ':</b> ' . $res['text'] . '</div>';
             // Проверяем, есть ли подчиненная информация
-            $total = $db->query("SELECT COUNT(*) FROM `forum` WHERE `refid` = '$id' AND (`type` = 'f' OR `type` = 'r' OR `type` = 't')")->fetchColumn();
+            $total = $db->query("SELECT COUNT(*) FROM `forum` WHERE `refid` = " . $id . " AND (`type` = 'f' OR `type` = 'r' OR `type` = 't')")->fetchColumn();
 
             if ($total) {
                 if ($res['type'] == 'f') {
@@ -73,7 +73,7 @@ switch ($mod) {
                             exit;
                         }
 
-                        $check = $db->query("SELECT COUNT(*) FROM `forum` WHERE `id` = '$category' AND `type` = 'f'")->fetchColumn();
+                        $check = $db->query("SELECT COUNT(*) FROM `forum` WHERE `id` = " . $category . " AND `type` = 'f'")->fetchColumn();
 
                         if (!$check) {
                             echo $tools->displayError(_t('Wrong data'));
@@ -82,24 +82,24 @@ switch ($mod) {
                         }
 
                         // Вычисляем правила сортировки и перемещаем разделы
-                        $sort = $db->query("SELECT * FROM `forum` WHERE `refid` = '$category' AND `type` ='r' ORDER BY `realid` DESC")->fetch();
+                        $sort = $db->query("SELECT * FROM `forum` WHERE `refid` = " . $category . " AND `type` ='r' ORDER BY `realid` DESC")->fetch();
                         $sortnum = !empty($sort['realid']) && $sort['realid'] > 0 ? $sort['realid'] + 1 : 1;
-                        $req_c = $db->query("SELECT * FROM `forum` WHERE `refid` = '$id' AND `type` = 'r'");
+                        $req_c = $db->query("SELECT * FROM `forum` WHERE `refid` = " . $id . " AND `type` = 'r'");
 
                         while ($res_c = $req_c->fetch()) {
-                            $db->exec("UPDATE `forum` SET `refid` = '" . $category . "', `realid` = '$sortnum' WHERE `id` = " . $res_c['id']);
+                            $db->exec("UPDATE `forum` SET `refid` = " . $category . ", `realid` = " . $sortnum . " WHERE `id` = " . $res_c['id']);
                             ++$sortnum;
                         }
 
                         // Перемещаем файлы в выбранную категорию
-                        $db->exec("UPDATE `cms_forum_files` SET `cat` = '" . $category . "' WHERE `cat` = " . $res['refid']);
-                        $db->exec("DELETE FROM `forum` WHERE `id` = '$id'");
+                        $db->exec("UPDATE `cms_forum_files` SET `cat` = " . $category . " WHERE `cat` = " . $res['refid']);
+                        $db->exec("DELETE FROM `forum` WHERE `id` = " . $id);
                         echo '<div class="rmenu"><p><h3>' . _t('Category deleted') . '</h3>' . _t('All content has been moved to') . ' <a href="../forum/index.php?id=' . $category . '">' . _t('selected category') . '</a></p></div>';
                     } else {
                         echo '<form action="index.php?act=forum&amp;mod=del&amp;id=' . $id . '" method="POST">' .
                             '<div class="rmenu"><p>' . _t('<h3>WARNING!</h3>There are subsections. Move them to another category.') . '</p>' .
                             '<p><h3>' . _t('Select category') . '</h3><select name="category" size="1">';
-                        $req_c = $db->query("SELECT * FROM `forum` WHERE `type` = 'f' AND `id` != '$id' ORDER BY `realid` ASC");
+                        $req_c = $db->query("SELECT * FROM `forum` WHERE `type` = 'f' AND `id` != " . $id . " ORDER BY `realid` ASC");
 
                         while ($res_c = $req_c->fetch()) {
                             echo '<option value="' . $res_c['id'] . '">' . $res_c['text'] . '</option>';
@@ -127,7 +127,7 @@ switch ($mod) {
                             exit;
                         }
 
-                        $check = $db->query("SELECT COUNT(*) FROM `forum` WHERE `id` = '$subcat' AND `type` = 'r'")->fetchColumn();
+                        $check = $db->query("SELECT COUNT(*) FROM `forum` WHERE `id` = " . $subcat . " AND `type` = 'r'")->fetchColumn();
 
                         if (!$check) {
                             echo $tools->displayError(_t('Wrong data'), '<a href="index.php?act=forum">' . _t('Forum Management') . '</a>');
@@ -135,9 +135,9 @@ switch ($mod) {
                             exit;
                         }
 
-                        $db->exec("UPDATE `forum` SET `refid` = '$subcat' WHERE `refid` = '$id'");
-                        $db->exec("UPDATE `cms_forum_files` SET `subcat` = '$subcat' WHERE `subcat` = '$id'");
-                        $db->exec("DELETE FROM `forum` WHERE `id` = '$id'");
+                        $db->exec("UPDATE `forum` SET `refid` = " . $subcat . " WHERE `refid` = " . $id);
+                        $db->exec("UPDATE `cms_forum_files` SET `subcat` = " . $subcat . " WHERE `subcat` = " . $id);
+                        $db->exec("DELETE FROM `forum` WHERE `id` = " . $id);
                         echo '<div class="rmenu"><p><h3>' . _t('Section deleted') . '</h3>' . _t('All content has been moved to') . ' <a href="../forum/index.php?id=' . $subcat . '">' . _t('selected section') . '</a>.' .
                             '</p></div>';
                     } elseif (isset($_POST['delete'])) {
@@ -148,28 +148,28 @@ switch ($mod) {
                         }
 
                         // Удаляем файлы
-                        $req_f = $db->query("SELECT * FROM `cms_forum_files` WHERE `subcat` = '$id'");
+                        $req_f = $db->query("SELECT * FROM `cms_forum_files` WHERE `subcat` = " . $id);
 
                         while ($res_f = $req_f->fetch()) {
                             unlink('../files/forum/attach/' . $res_f['filename']);
                         }
 
-                        $db->exec("DELETE FROM `cms_forum_files` WHERE `subcat` = '$id'");
+                        $db->exec("DELETE FROM `cms_forum_files` WHERE `subcat` = " . $id);
 
                         // Удаляем посты, голосования и метки прочтений
-                        $req_t = $db->query("SELECT `id` FROM `forum` WHERE `refid` = '$id' AND `type` = 't'");
+                        $req_t = $db->query("SELECT `id` FROM `forum` WHERE `refid` = " . $id . " AND `type` = 't'");
 
                         while ($res_t = $req_t->fetch()) {
-                            $db->exec("DELETE FROM `forum` WHERE `refid` = '" . $res_t['id'] . "'");
-                            $db->exec("DELETE FROM `cms_forum_vote` WHERE `topic` = '" . $res_t['id'] . "'");
-                            $db->exec("DELETE FROM `cms_forum_vote_users` WHERE `topic` = '" . $res_t['id'] . "'");
-                            $db->exec("DELETE FROM `cms_forum_rdm` WHERE `topic_id` = '" . $res_t['id'] . "'");
+                            $db->exec("DELETE FROM `forum` WHERE `refid` = " . $res_t['id']);
+                            $db->exec("DELETE FROM `cms_forum_vote` WHERE `topic` = " . $res_t['id']);
+                            $db->exec("DELETE FROM `cms_forum_vote_users` WHERE `topic` = " . $res_t['id']);
+                            $db->exec("DELETE FROM `cms_forum_rdm` WHERE `topic_id` = " . $res_t['id']);
                         }
 
                         // Удаляем темы
-                        $db->exec("DELETE FROM `forum` WHERE `refid` = '$id'");
+                        $db->exec("DELETE FROM `forum` WHERE `refid` = " . $id);
                         // Удаляем раздел
-                        $db->exec("DELETE FROM `forum` WHERE `id` = '$id'");
+                        $db->exec("DELETE FROM `forum` WHERE `id` = " . $id);
                         // Оптимизируем таблицы
                         $db->query("OPTIMIZE TABLE `cms_forum_files` , `cms_forum_rdm` , `forum` , `cms_forum_vote` , `cms_forum_vote_users`");
                         echo '<div class="rmenu"><p>' . _t('Section with all contents are removed') . '<br>' .
@@ -179,14 +179,14 @@ switch ($mod) {
                             '<p>' . _t('<h3>WARNING!</h3>There are topics in the section. You must move them to another section.') . '</p>' . '<p><h3>' . _t('Select section') . '</h3>';
                         $cat = isset($_GET['cat']) ? abs(intval($_GET['cat'])) : 0;
                         $ref = $cat ? $cat : $res['refid'];
-                        $req_r = $db->query("SELECT * FROM `forum` WHERE `refid` = '$ref' AND `id` != '$id' AND `type` = 'r' ORDER BY `realid` ASC");
+                        $req_r = $db->query("SELECT * FROM `forum` WHERE `refid` = " . $ref . " AND `id` != " . $id . " AND `type` = 'r' ORDER BY `realid` ASC");
 
                         while ($res_r = $req_r->fetch()) {
                             echo '<input type="radio" name="subcat" value="' . $res_r['id'] . '" />&#160;' . $res_r['text'] . '<br>';
                         }
 
                         echo '</p><p><h3>' . _t('Other category') . '</h3><ul>';
-                        $req_c = $db->query("SELECT * FROM `forum` WHERE `type` = 'f' AND `id` != '$ref' ORDER BY `realid` ASC");
+                        $req_c = $db->query("SELECT * FROM `forum` WHERE `type` = 'f' AND `id` != " . $ref . " ORDER BY `realid` ASC");
 
                         while ($res_c = $req_c->fetch()) {
                             echo '<li><a href="index.php?act=forum&amp;mod=del&amp;id=' . $id . '&amp;cat=' . $res_c['id'] . '">' . $res_c['text'] . '</a></li>';
@@ -206,7 +206,7 @@ switch ($mod) {
             } else {
                 // Удаление пустого раздела, или категории
                 if (isset($_POST['submit'])) {
-                    $db->exec("DELETE FROM `forum` WHERE `id` = '$id'");
+                    $db->exec("DELETE FROM `forum` WHERE `id` = " . $id);
                     echo '<div class="rmenu"><p>' . ($res['type'] == 'r' ? _t('Section deleted') : _t('Category deleted')) . '</p></div>';
                 } else {
                     echo '<div class="rmenu"><p>' . _t('Do you really want to delete?') . '</p>' .
@@ -226,7 +226,7 @@ switch ($mod) {
         // Добавление категории
         if ($id) {
             // Проверяем наличие категории
-            $req = $db->query("SELECT `text` FROM `forum` WHERE `id` = '$id' AND `type` = 'f'");
+            $req = $db->query("SELECT `text` FROM `forum` WHERE `id` = " . $id . " AND `type` = 'f'");
 
             if ($req->rowCount()) {
                 $res = $req->fetch();
@@ -261,7 +261,7 @@ switch ($mod) {
 
             if (!$error) {
                 // Добавляем в базу категорию
-                $req = $db->query("SELECT `realid` FROM `forum` WHERE " . ($id ? "`refid` = '$id' AND `type` = 'r'" : "`type` = 'f'") . " ORDER BY `realid` DESC LIMIT 1");
+                $req = $db->query("SELECT `realid` FROM `forum` WHERE " . ($id ? "`refid` = " . $id . " AND `type` = 'r'" : "`type` = 'f'") . " ORDER BY `realid` DESC LIMIT 1");
 
                 if ($req->rowCount()) {
                     $res = $req->fetch();
@@ -331,7 +331,7 @@ switch ($mod) {
             exit;
         }
 
-        $req = $db->query("SELECT * FROM `forum` WHERE `id` = '$id'");
+        $req = $db->query("SELECT * FROM `forum` WHERE `id` = " . $id);
 
         if ($req->rowCount()) {
             $res = $req->fetch();
@@ -349,7 +349,7 @@ switch ($mod) {
 
                     if ($res['type'] == 'r' && !$category) {
                         $error[] = _t('Category is not chosen');
-                    } elseif ($res['type'] == 'r' && !$db->query("SELECT COUNT(*) FROM `forum` WHERE `id` = '$category' AND `type` = 'f'")->fetchColumn()) {
+                    } elseif ($res['type'] == 'r' && !$db->query("SELECT COUNT(*) FROM `forum` WHERE `id` = " . $category . " AND `type` = 'f'")->fetchColumn()) {
                         $error[] = _t('Category is not chosen');
                     }
 
@@ -382,13 +382,13 @@ switch ($mod) {
 
                         if ($res['type'] == 'r' && $category != $res['refid']) {
                             // Вычисляем сортировку
-                            $req_s = $db->query("SELECT `realid` FROM `forum` WHERE `refid` = '$category' AND `type` = 'r' ORDER BY `realid` DESC LIMIT 1");
+                            $req_s = $db->query("SELECT `realid` FROM `forum` WHERE `refid` = " . $category . " AND `type` = 'r' ORDER BY `realid` DESC LIMIT 1");
                             $res_s = $req_s->fetch();
                             $sort = $res_s['realid'] + 1;
                             // Меняем категорию
-                            $db->exec("UPDATE `forum` SET `refid` = '$category', `realid` = '$sort' WHERE `id` = '$id'");
+                            $db->exec("UPDATE `forum` SET `refid` = " . $category . ", `realid` = " . $sort . " WHERE `id` = " . $id);
                             // Меняем категорию для прикрепленных файлов
-                            $db->exec("UPDATE `cms_forum_files` SET `cat` = '$category' WHERE `cat` = '" . $res['refid'] . "'");
+                            $db->exec("UPDATE `cms_forum_files` SET `cat` = " . $category . " WHERE `cat` = " . $res['refid']);
                         }
                         header('Location: index.php?act=forum&mod=cat' . ($res['type'] == 'r' ? '&id=' . $res['refid'] : ''));
                     } else {
@@ -437,19 +437,19 @@ switch ($mod) {
     case 'up':
         // Перемещение на одну позицию вверх
         if ($id) {
-            $req = $db->query("SELECT * FROM `forum` WHERE `id` = '$id'");
+            $req = $db->query("SELECT * FROM `forum` WHERE `id` = " . $id);
 
             if ($req->rowCount()) {
                 $res1 = $req->fetch();
                 $sort = $res1['realid'];
-                $req = $db->query("SELECT * FROM `forum` WHERE `type` = '" . ($res1['type'] == 'f' ? 'f' : 'r') . "' AND `realid` < '$sort' ORDER BY `realid` DESC LIMIT 1");
+                $req = $db->query("SELECT * FROM `forum` WHERE `type` = '" . ($res1['type'] == 'f' ? 'f' : 'r') . "' AND `realid` < " . $sort . " ORDER BY `realid` DESC LIMIT 1");
 
                 if ($req->rowCount()) {
                     $res = $req->fetch();
                     $id2 = $res['id'];
                     $sort2 = $res['realid'];
-                    $db->exec("UPDATE `forum` SET `realid` = '$sort2' WHERE `id` = '$id'");
-                    $db->exec("UPDATE `forum` SET `realid` = '$sort' WHERE `id` = '$id2'");
+                    $db->exec("UPDATE `forum` SET `realid` = " . $sort2 . " WHERE `id` = " . $id);
+                    $db->exec("UPDATE `forum` SET `realid` = " . $sort . " WHERE `id` = " . $id2);
                 }
             }
         }
@@ -460,19 +460,19 @@ switch ($mod) {
     case 'down':
         // Перемещение на одну позицию вниз
         if ($id) {
-            $req = $db->query("SELECT * FROM `forum` WHERE `id` = '$id'");
+            $req = $db->query("SELECT * FROM `forum` WHERE `id` = " . $id);
 
             if ($req->rowCount()) {
                 $res1 = $req->fetch();
                 $sort = $res1['realid'];
-                $req = $db->query("SELECT * FROM `forum` WHERE `type` = '" . ($res1['type'] == 'f' ? 'f' : 'r') . "' AND `realid` > '$sort' ORDER BY `realid` ASC LIMIT 1");
+                $req = $db->query("SELECT * FROM `forum` WHERE `type` = '" . ($res1['type'] == 'f' ? 'f' : 'r') . "' AND `realid` > " . $sort . " ORDER BY `realid` ASC LIMIT 1");
 
                 if ($req->rowCount()) {
                     $res = $req->fetch();
                     $id2 = $res['id'];
                     $sort2 = $res['realid'];
-                    $db->exec("UPDATE `forum` SET `realid` = '$sort2' WHERE `id` = '$id'");
-                    $db->exec("UPDATE `forum` SET `realid` = '$sort' WHERE `id` = '$id2'");
+                    $db->exec("UPDATE `forum` SET `realid` = " . $sort2 . " WHERE `id` = " . $id);
+                    $db->exec("UPDATE `forum` SET `realid` = " . $sort . " WHERE `id` = " . $id2);
                 }
             }
         }
@@ -485,10 +485,10 @@ switch ($mod) {
 
         if ($id) {
             // Управление разделами
-            $req = $db->query("SELECT `text` FROM `forum` WHERE `id` = '$id' AND `type` = 'f'");
+            $req = $db->query("SELECT `text` FROM `forum` WHERE `id` = " . $id . " AND `type` = 'f'");
             $res = $req->fetch();
             echo '<div class="bmenu"><a href="index.php?act=forum&amp;mod=cat"><b>' . $res['text'] . '</b></a> | ' . _t('List of sections') . '</div>';
-            $req = $db->query("SELECT * FROM `forum` WHERE `refid` = '$id' AND `type` = 'r' ORDER BY `realid` ASC");
+            $req = $db->query("SELECT * FROM `forum` WHERE `refid` = " . $id . " AND `type` = 'r' ORDER BY `realid` ASC");
 
             if ($req->rowCount()) {
                 $i = 0;
@@ -522,7 +522,7 @@ switch ($mod) {
             while ($res = $req->fetch()) {
                 echo $i % 2 ? '<div class="list2">' : '<div class="list1">';
                 echo '<a href="index.php?act=forum&amp;mod=cat&amp;id=' . $res['id'] . '"><b>' . $res['text'] . '</b></a> ' .
-                    '(' . $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'r' AND `refid` = '" . $res['id'] . "'")->fetchColumn() . ')' .
+                    '(' . $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'r' AND `refid` = " . $res['id'])->fetchColumn() . ')' .
                     '&#160;<a href="../forum/index.php?id=' . $res['id'] . '">&gt;&gt;</a>';
 
                 if (!empty($res['soft'])) {
@@ -559,7 +559,7 @@ switch ($mod) {
         }
 
         if (isset($_GET['rsort'])) {
-            $sort = " AND `forum`.`refid` = '" . abs(intval($_GET['rsort'])) . "'";
+            $sort = " AND `forum`.`refid` = " . abs(intval($_GET['rsort']));
             $link = '&amp;rsort=' . abs(intval($_GET['rsort']));
             echo '<div class="bmenu">' . _t('Filter by section') . ' <a href="index.php?act=forum&amp;mod=htopics">[x]</a></div>';
         }
@@ -571,7 +571,7 @@ switch ($mod) {
                 exit;
             }
 
-            $req = $db->query("SELECT `id` FROM `forum` WHERE `type` = 't' AND `close` = '1' $sort");
+            $req = $db->query("SELECT `id` FROM `forum` WHERE `type` = 't' AND `close` = 1 " . $sort);
 
             while ($res = $req->fetch()) {
                 $req_f = $db->query("SELECT * FROM `cms_forum_files` WHERE `topic` = " . $res['id']);
@@ -587,11 +587,11 @@ switch ($mod) {
                 $db->exec("DELETE FROM `forum` WHERE `type` = 'm' AND `refid` = " . $res['id']);
             }
             // Удаляем темы
-            $db->exec("DELETE FROM `forum` WHERE `type` = 't' AND `close` = '1' $sort");
+            $db->exec("DELETE FROM `forum` WHERE `type` = 't' AND `close` = 1 " . $sort);
 
             header('Location: index.php?act=forum&mod=htopics');
         } else {
-            $total = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 't' AND `close` = '1' $sort")->fetchColumn();
+            $total = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 't' AND `close` = 1 " . $sort)->fetchColumn();
 
             if ($total > $kmess) {
                 echo '<div class="topmenu">' . $tools->displayPagination('index.php?act=forum&amp;mod=htopics&amp;', $start, $total, $kmess) . '</div>';
@@ -599,14 +599,14 @@ switch ($mod) {
 
             $req = $db->query("SELECT `forum`.*, `forum`.`id` AS `fid`, `forum`.`user_id` AS `id`, `forum`.`from` AS `name`, `forum`.`soft` AS `browser`, `users`.`rights`, `users`.`lastdate`, `users`.`sex`, `users`.`status`, `users`.`datereg`
             FROM `forum` LEFT JOIN `users` ON `forum`.`user_id` = `users`.`id`
-            WHERE `forum`.`type` = 't' AND `forum`.`close` = '1' $sort ORDER BY `forum`.`id` DESC LIMIT $start, $kmess");
+            WHERE `forum`.`type` = 't' AND `forum`.`close` = 1 " . $sort . " ORDER BY `forum`.`id` DESC LIMIT " . $start . ", " . $kmess);
 
             if ($req->rowCount()) {
                 $i = 0;
 
                 while ($res = $req->fetch()) {
-                    $subcat = $db->query("SELECT * FROM `forum` WHERE `id` = '" . $res['refid'] . "'")->fetch();
-                    $cat = $db->query("SELECT * FROM `forum` WHERE `id` = '" . $subcat['refid'] . "'")->fetch();
+                    $subcat = $db->query("SELECT * FROM `forum` WHERE `id` = " . $res['refid'])->fetch();
+                    $cat = $db->query("SELECT * FROM `forum` WHERE `id` = " . $subcat['refid'])->fetch();
                     $ttime = '<span class="gray">(' . $tools->displayDate($res['time']) . ')</span>';
                     $text = '<a href="../forum/index.php?id=' . $res['fid'] . '"><b>' . $res['text'] . '</b></a>';
                     $text .= '<br><small><a href="../forum/index.php?id=' . $cat['id'] . '">' . $cat['text'] . '</a> / <a href="../forum/index.php?id=' . $subcat['id'] . '">' . $subcat['text'] . '</a></small>';
@@ -652,11 +652,11 @@ switch ($mod) {
         $link = '';
 
         if (isset($_GET['tsort'])) {
-            $sort = " AND `forum`.`refid` = '" . abs(intval($_GET['tsort'])) . "'";
+            $sort = " AND `forum`.`refid` = " . abs(intval($_GET['tsort']));
             $link = '&amp;tsort=' . abs(intval($_GET['tsort']));
             echo '<div class="bmenu">' . _t('Filter by topic') . ' <a href="index.php?act=forum&amp;mod=hposts">[x]</a></div>';
         } elseif (isset($_GET['usort'])) {
-            $sort = " AND `forum`.`user_id` = '" . abs(intval($_GET['usort'])) . "'";
+            $sort = " AND `forum`.`user_id` = " . abs(intval($_GET['usort']));
             $link = '&amp;usort=' . abs(intval($_GET['usort']));
             echo '<div class="bmenu">' . _t('Filter by author') . ' <a href="index.php?act=forum&amp;mod=hposts">[x]</a></div>';
         }
@@ -668,25 +668,25 @@ switch ($mod) {
                 exit;
             }
 
-            $req = $db->query("SELECT `id` FROM `forum` WHERE `type` = 'm' AND `close` = '1' $sort");
+            $req = $db->query("SELECT `id` FROM `forum` WHERE `type` = 'm' AND `close` = 1 " . $sort);
 
             while ($res = $req->fetch()) {
-                $req_f = $db->query("SELECT * FROM `cms_forum_files` WHERE `post` = '" . $res['id'] . "' LIMIT 1");
+                $req_f = $db->query("SELECT * FROM `cms_forum_files` WHERE `post` = " . $res['id'] . " LIMIT 1");
 
                 if ($req_f->rowCount()) {
                     $res_f = $req_f->fetch();
                     // Удаляем файлы
                     unlink('../files/forum/attach/' . $res_f['filename']);
-                    $db->exec("DELETE FROM `cms_forum_files` WHERE `post` = '" . $res['id'] . "' LIMIT 1");
+                    $db->exec("DELETE FROM `cms_forum_files` WHERE `post` = " . $res['id'] . " LIMIT 1");
                 }
             }
 
             // Удаляем посты
-            $db->exec("DELETE FROM `forum` WHERE `type` = 'm' AND `close` = '1' $sort");
+            $db->exec("DELETE FROM `forum` WHERE `type` = 'm' AND `close` = 1 " . $sort);
 
             header('Location: index.php?act=forum&mod=hposts');
         } else {
-            $total = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'm' AND `close` = '1' $sort")->fetchColumn();
+            $total = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'm' AND `close` = 1 " . $sort)->fetchColumn();
 
             if ($total > $kmess) {
                 echo '<div class="topmenu">' . $tools->displayPagination('index.php?act=forum&amp;mod=hposts&amp;', $start, $total, $kmess) . '</div>';
@@ -694,7 +694,7 @@ switch ($mod) {
 
             $req = $db->query("SELECT `forum`.*, `forum`.`id` AS `fid`, `forum`.`user_id` AS `id`, `forum`.`from` AS `name`, `forum`.`soft` AS `browser`, `users`.`rights`, `users`.`lastdate`, `users`.`sex`, `users`.`status`, `users`.`datereg`
             FROM `forum` LEFT JOIN `users` ON `forum`.`user_id` = `users`.`id`
-            WHERE `forum`.`type` = 'm' AND `forum`.`close` = '1' $sort ORDER BY `forum`.`id` DESC LIMIT $start, $kmess");
+            WHERE `forum`.`type` = 'm' AND `forum`.`close` = 1 " . $sort . " ORDER BY `forum`.`id` DESC LIMIT " . $start . ", " . $kmess);
 
             if ($req->rowCount()) {
                 $i = 0;
@@ -702,11 +702,11 @@ switch ($mod) {
                 while ($res = $req->fetch()) {
                     $res['ip'] = ip2long($res['ip']);
                     $posttime = ' <span class="gray">(' . $tools->displayDate($res['time']) . ')</span>';
-                    $page = ceil($db->query("SELECT COUNT(*) FROM `forum` WHERE `refid` = '" . $res['refid'] . "' AND `id` " . ($set_forum['upfp'] ? ">=" : "<=") . " '" . $res['fid'] . "'")->fetchColumn() / $kmess);
+                    $page = ceil($db->query("SELECT COUNT(*) FROM `forum` WHERE `refid` = " . $res['refid'] . " AND `id` " . ($set_forum['upfp'] ? ">=" : "<=") . $res['fid'])->fetchColumn() / $kmess);
                     $text = mb_substr($res['text'], 0, 500);
                     $text = $tools->checkout($text, 1, 0);
                     $text = preg_replace('#\[c\](.*?)\[/c\]#si', '<div class="quote">\1</div>', $text);
-                    $theme = $db->query("SELECT `id`, `text` FROM `forum` WHERE `id` = '" . $res['refid'] . "'")->fetch();
+                    $theme = $db->query("SELECT `id`, `text` FROM `forum` WHERE `id` = " . $res['refid'])->fetch();
                     $text = '<b>' . $theme['text'] . '</b> <a href="../forum/index.php?id=' . $theme['id'] . '&amp;page=' . $page . '">&gt;&gt;</a><br>' . $text;
                     $subtext = '<span class="gray">' . _t('Filter') . ':</span> ';
                     $subtext .= '<a href="index.php?act=forum&amp;mod=hposts&amp;tsort=' . $theme['id'] . '">' . _t('by topic') . '</a> | ';
@@ -745,11 +745,11 @@ switch ($mod) {
         $total_cat = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'f'")->fetchColumn();
         $total_sub = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'r'")->fetchColumn();
         $total_thm = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 't'")->fetchColumn();
-        $total_thm_del = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 't' AND `close` = '1'")->fetchColumn();
+        $total_thm_del = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 't' AND `close` = 1")->fetchColumn();
         $total_msg = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'm'")->fetchColumn();
-        $total_msg_del = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'm' AND `close` = '1'")->fetchColumn();
+        $total_msg_del = $db->query("SELECT COUNT(*) FROM `forum` WHERE `type` = 'm' AND `close` = 1")->fetchColumn();
         $total_files = $db->query("SELECT COUNT(*) FROM `cms_forum_files`")->fetchColumn();
-        $total_votes = $db->query("SELECT COUNT(*) FROM `cms_forum_vote` WHERE `type` = '1'")->fetchColumn();
+        $total_votes = $db->query("SELECT COUNT(*) FROM `cms_forum_vote` WHERE `type` = 1")->fetchColumn();
 
         echo '<div class="phdr"><a href="index.php"><b>' . _t('Admin Panel') . '</b></a> | ' . _t('Forum Management') . '</div>' .
             '<div class="gmenu"><p><h3>' . $tools->image('rate.gif') . _t('Statistic') . '</h3><ul>' .
