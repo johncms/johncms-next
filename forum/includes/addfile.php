@@ -45,7 +45,7 @@ if ($res['type'] != 'm' || $res['user_id'] != $systemUser->id) {
 }
 
 // Проверяем лимит времени, отведенный для выгрузки файла
-if ($res['time'] < (time() - 180)) {
+if ($res['time'] < (time() - 180) && !isset($_GET['update'])) {
     echo $tools->displayError(_t('The time allotted for the file upload has expired'), '<a href="index.php?id=' . $res['refid'] . '&amp;page=' . $page . '">' . _t('Back') . '</a>');
     require('../system/end.php');
     exit;
@@ -54,7 +54,7 @@ if ($res['time'] < (time() - 180)) {
 // Проверяем, был ли файл уже загружен
 $exist = $db->query("SELECT COUNT(*) FROM `cms_forum_files` WHERE `post` = '$id'")->fetchColumn();
 
-if ($exist) {
+if ($exist && !isset($_GET['update'])) {
     echo $tools->displayError(_t('File is already uploaded'));
     require('../system/end.php');
     exit;
@@ -70,6 +70,11 @@ if (isset($_POST['submit'])) {
         $do_file = true;
         $file = $tools->rusLat($_FILES['fail']['name']);
         $fsize = $_FILES['fail']['size'];
+    } else {
+        $error[] = _t('Error uploading file');
+        echo $tools->displayError($error, '<a href="index.php?act=addfile&amp;id=' . $id . '&amp;update">' . _t('Repeat') . '</a>');
+        require('../system/end.php');
+        exit;
     }
 
     // Обработка файла (если есть), проверка на ошибки
@@ -175,7 +180,7 @@ if (isset($_POST['submit'])) {
 } else {
     // Форма выбора файла для выгрузки
     echo '<div class="phdr"><b>' . _t('Add File') . '</b></div>'
-        . '<div class="gmenu"><form action="index.php?act=addfile&amp;id=' . $id . '" method="post" enctype="multipart/form-data"><p>'
+        . '<div class="gmenu"><form action="index.php?act=addfile&amp;id=' . $id . (isset($_GET['update']) ? '&update' : '') . '" method="post" enctype="multipart/form-data"><p>'
         . '<input type="file" name="fail"/>'
         . '</p><p><input type="submit" name="submit" value="' . _t('Upload') . '"/></p></form></div>'
         . '<div class="phdr">' . _t('Max. Size') . ': ' . $config['flsz'] . 'kb.</div>';
