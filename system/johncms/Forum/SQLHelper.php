@@ -33,6 +33,6 @@ trait SQLHelper
     }
     
     public function whereTime() {
-        return $this->where() . ' AND `time` > ' . $this->getTime();
+        return $this->where() . ($this->getTime() ? ' AND `time` > ' . $this->getTime() : '');
     }
 }
