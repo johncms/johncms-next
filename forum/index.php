@@ -828,11 +828,11 @@ if ($act && ($key = array_search($act, $mods)) !== false && file_exists('include
                 }
                 
                 // тут кнопки pick/ban темы
-                $subscribe = new Johncms\Subscribe();
+                $subscribe = new Johncms\Forum\Subscribe();
                 echo '<p class="gmenu green">'
-                    . (!$subscribe->isPick($id) ? '<a href="index.php?act=subscribe&amp;do=pick&amp;pick=' . $id . '">' . _t('Pick subscribe') . '</a>' : _t('Pick subscribe')) 
+                    . (!$subscribe->picks()->exists($id) ? '<a href="index.php?act=subscribe&amp;do=pick&amp;pick=' . $id . '">' . _t('Pick subscribe') . '</a>' : _t('Pick subscribe')) 
                     . ' | ' 
-                    . (!$subscribe->isBan($id) ? '<a  href="index.php?act=subscribe&amp;do=ban&amp;ban=' . $id . '">' . _t('Ban subscribe') . '</a>' : _t('Ban subscribe'))
+                    . (!$subscribe->bans()->exists($id) ? '<a  href="index.php?act=subscribe&amp;do=ban&amp;ban=' . $id . '">' . _t('Ban subscribe') . '</a>' : _t('Ban subscribe'))
                     . '</p>';
                 
                 // Ссылки на модерские функции управления темой
