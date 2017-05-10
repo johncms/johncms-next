@@ -31,8 +31,9 @@ class Subscribe
     private $update = false;
 
     public function __construct() {
-        $settings = unserialize(\App::getContainer()->get(\Johncms\Api\UserInterface::class)->set_forum);
-        #echo '<pre>' . print_r($settings, 1) . '</pre>';
+        $container = \App::getContainer();
+        $systemUser = $container->get(\Johncms\Api\UserInterface::class);
+        $settings = $systemUser->set_forum ? unserialize($systemUser->set_forum) : [];
         $this->picks = new Elements(!is_null($settings['pick']) ? $settings['pick'] : []);
         $this->bans = new Elements(!is_null($settings['ban']) ? $settings['ban'] : []);
         $this->sectionPicks = new Elements(!is_null($settings['spick']) ? $settings['spick'] : []);
@@ -44,13 +45,14 @@ class Subscribe
         $container = \App::getContainer();
         $db = $container->get(\PDO::class);
         $systemUser = $container->get(\Johncms\Api\UserInterface::class);
+        $sysSettings = !empty($systemUser->set_forum) ? unserialize($systemUser->set_forum) : [];
 
         $settings['pick'] = $this->picks->get();
         $settings['ban'] = $this->bans->get();
         $settings['spick'] = $this->sectionPicks->get();
         $settings['sban'] = $this->sectionBans->get();
         $settings['reset'] = $this->time;
-        $array = array_merge(unserialize($systemUser->set_forum), $settings);
+        $array = array_merge($sysSettings, $settings);
         $db->prepare('UPDATE `users` SET `set_forum` = ? WHERE `id` = ?')->execute([
                 serialize($array),
                 $systemUser->id,

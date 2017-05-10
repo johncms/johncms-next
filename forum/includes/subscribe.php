@@ -27,7 +27,6 @@ $tools = $container->get(Johncms\Api\ToolsInterface::class);
 $i = 0;
                                   
 $subscribe = new Johncms\Forum\Subscribe();
-#echo $subscribe->whereTime();
 
 // Закрываем доступ
 if (!$systemUser->isValid()) {
@@ -208,10 +207,6 @@ switch ($do) {
 }
 
 if (in_array($do, ['pick', 'ban', 'reset'])) {
-    $db->prepare('UPDATE `users` SET `set_forum` = ? WHERE `id` = ?')->execute([
-        serialize($set_forum),
-        $systemUser->id,
-    ]);
     header('Location: ' . $_SERVER['HTTP_REFERER']);
     exit;
 }
