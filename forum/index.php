@@ -181,6 +181,7 @@ $mods = [
     'vote',
     'who',
     'curators',
+    'subscribe',
 ];
 
 if ($act && ($key = array_search($act, $mods)) !== false && file_exists('includes/' . $mods[$key] . '.php')) {
@@ -293,7 +294,8 @@ if ($act && ($key = array_search($act, $mods)) !== false && file_exists('include
         }
 
         // Выводим верхнюю панель навигации
-        echo '<a id="up"></a><p>' . $counters->forumNew(1) . '</p>' .
+        echo '<a id="up"></a><p>' . $counters->forumNew(1) .
+            ($systemUser->isValid() ? '<br><a href="?act=subscribe">' . _t('My subscribe') . '</a></p>' : '') .
             '<div class="phdr">' . implode(' / ', $tree) . '</div>' .
             '<div class="topmenu"><a href="search.php?id=' . $id . '">' . _t('Search') . '</a>' . ($filelink ? ' | ' . $filelink : '') . ($wholink ? ' | ' . $wholink : '') . '</div>';
 
@@ -824,7 +826,15 @@ if ($act && ($key = array_search($act, $mods)) !== false && file_exists('include
 
                     echo '<p><div class="func">' . _t('Curators') . ': ' . implode(', ', $array) . '</div></p>';
                 }
-
+                
+                // тут кнопки pick/ban темы
+                $subscribe = new Johncms\Forum\Subscribe();
+                echo '<p class="gmenu green">'
+                    . (!$subscribe->picks()->exists($id) ? '<a href="index.php?act=subscribe&amp;do=pick&amp;pick=' . $id . '">' . _t('Pick subscribe') . '</a>' : _t('Pick subscribe')) 
+                    . ' | ' 
+                    . (!$subscribe->bans()->exists($id) ? '<a  href="index.php?act=subscribe&amp;do=ban&amp;ban=' . $id . '">' . _t('Ban subscribe') . '</a>' : _t('Ban subscribe'))
+                    . '</p>';
+                
                 // Ссылки на модерские функции управления темой
                 if ($systemUser->rights == 3 || $systemUser->rights >= 6) {
                     echo '<p><div class="func">';
@@ -887,7 +897,8 @@ if ($act && ($key = array_search($act, $mods)) !== false && file_exists('include
         // Список Категорий форума                                //
         ////////////////////////////////////////////////////////////
         $count = $db->query("SELECT COUNT(*) FROM `cms_forum_files`" . ($systemUser->rights >= 7 ? '' : " WHERE `del` != '1'"))->fetchColumn();
-        echo '<p>' . $counters->forumNew(1) . '</p>' .
+        echo '<p>' . $counters->forumNew(1) .
+            ($systemUser->isValid() ? '<br><a href="?act=subscribe">' . _t('My subscribe') . '</a></p>' : '') .
             '<div class="phdr"><b>' . _t('Forum') . '</b></div>' .
             '<div class="topmenu"><a href="search.php">' . _t('Search') . '</a> | <a href="index.php?act=files">' . _t('Files') . '</a> <span class="red">(' . $count . ')</span></div>';
         $req = $db->query("SELECT `id`, `text`, `soft` FROM `forum` WHERE `type`='f' ORDER BY `realid`");
