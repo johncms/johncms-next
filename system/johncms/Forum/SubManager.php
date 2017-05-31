@@ -23,7 +23,7 @@ trait SubManager
         $this->update();
     }
     
-    private function put(Elements $first, Elements $second, int $value) {
+    private function put(Elements $first, Elements $second, $value) {
         $update = false;
         if (!$first->exists($value)) {
             $first->add($value);

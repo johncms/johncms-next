@@ -34,14 +34,11 @@ trait ArrayHelper
         $res = [];
         $uid = substr(md5(uniqid(time())), 0, 8);
         $result = \App::getContainer()->get(\PDO::class)
-            ->query("SELECT GROUP_CONCAT(`id` SEPARATOR ',') as `ids`, GROUP_CONCAT(`text` SEPARATOR '" . $uid . "') as `names` FROM `forum` WHERE `type` = 'r'")
-            ->fetch();
+            ->query("SELECT `id`, `text` AS `name` FROM `forum` WHERE `type` = 'r'")
+            ->fetchAll();
         if ($result) {
-            $keys = explode(',', $result['ids']);
-            $names = explode($uid, $result['names']);
-            $res = array_combine($keys, $names);
+            $res = array_combine(array_column($result, 'id'), array_column($result, 'name'));
         }
-        
         return $res;
     }
     
